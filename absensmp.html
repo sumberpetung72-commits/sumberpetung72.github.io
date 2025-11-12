@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absensi Online Siswa - Fitur Hapus dan Excel</title>
+    
+    <style>
+        /* =================== KODE CSS =================== */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e9ecef;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            position: relative; /* Penting untuk positioning pseudo-element */
+            z-index: 1; 
+        }
+
+        /* --- Logo Transparan sebagai Latar Belakang --- */
+        body::before {
+            content: '';
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('logo92.png'); /* Pastikan path logo benar */
+            background-size: 30%; 
+            background-position: center center; 
+            background-repeat: no-repeat; 
+            opacity: 0.1; /* Transparansi 10% */
+            z-index: -1; 
+            pointer-events: none; 
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 2; 
+            position: relative; 
+        }
+        .header img {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+            margin-bottom: 30px;
+            z-index: 2; 
+            position: relative; 
+        }
+        h2 {
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+            font-size: 15px;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 17px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+        .submit-btn.update-btn {
+            background-color: #ffc107;
+            color: #333;
+            display: none;
+        }
+        .submit-btn.update-btn:hover {
+            background-color: #e0a800;
+        }
+        .submit-btn:hover {
+            background-color: #1e7e34;
+        }
+        
+        /* Gaya untuk tabel absensi */
+        .attendance-data-section {
+            background-color: #ffffff;
+            padding: 30px 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            overflow-x: auto;
+            z-index: 2; 
+            position: relative; 
+        }
+        .attendance-data-section h3 {
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 20px;
+        }
+        #attendance-table {
+            width: 100%;
+            min-width: 700px;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        #attendance-table th, #attendance-table td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+        #attendance-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            margin-right: 5px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .edit-btn {
+            background-color: #17a2b8;
+            color: white;
+        }
+        .edit-btn:hover { background-color: #138496; }
+
+        /* Gaya baru untuk tombol Hapus */
+        .delete-btn {
+            background-color: #dc3545; /* Warna Merah */
+            color: white;
+        }
+        .delete-btn:hover { background-color: #c82333; }
+        
+        /* Gaya untuk tombol Simpan dan Unduh */
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            z-index: 2; 
+            position: relative; 
+        }
+        .save-local-btn {
+            padding: 10px 20px;
+            background-color: #007bff; 
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .save-local-btn:hover {
+            background-color: #0056b3;
+        }
+        .download-excel-btn { 
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .download-excel-btn:hover {
+            background-color: #5a6268;
+        }
+
+        /* --- Penyesuaian Responsif untuk Layar Kecil (HP Android) --- */
+        @media (max-width: 600px) {
+            .header img {
+                max-width: 100px; /* Diperkecil menjadi maksimal 100px di layar HP */
+            }
+            .header h1 {
+                font-size: 1.2em; /* Mengurangi ukuran judul agar tidak terlalu lebar */
+            }
+            .container, .attendance-data-section {
+                padding: 20px; /* Mengurangi padding untuk menghemat ruang */
+            }
+            /* Menyesuaikan transparansi logo watermark */
+            body::before {
+                background-size: 50%; /* Membuat watermark sedikit lebih besar di layar kecil */
+                opacity: 0.07; /* Sedikit lebih transparan */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <img src="logo92.png" alt="Logo SMP Negeri 02 Kalipare"> 
+    <h1>Absensi Online Siswa SMP Negeri 02 Kalipare</h1>
+</div>
+
+<div class="container">
+    <h2 id="form-title">📝 Tambah Absensi Siswa</h2>
+    
+    <form id="attendance-form">
+        <input type="hidden" id="record-id"> 
+        
+        <div class="form-group">
+            <label for="nama_siswa">Nama Lengkap:</label>
+            <input type="text" id="nama_siswa" name="nama_siswa" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="kelas_siswa">Kelas:</label>
+            <select id="kelas_siswa" name="kelas_siswa" required>
+                <option value="">-- Pilih Kelas --</option>
+                <option value="7A">Kelas 7A</option>
+                <option value="7B">Kelas 7B</option>
+                <option value="8A">Kelas 8A</option>
+                <option value="8B">Kelas 8B</option>
+                <option value="9A">Kelas 9A</option>
+                <option value="9B">Kelas 9B</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="status_kehadiran">Status Kehadiran:</label>
+            <select id="status_kehadiran" name="status_kehadiran" required>
+                <option value="">-- Pilih Status --</option>
+                <option value="Hadir">Hadir</option>
+                <option value="Sakit">Sakit</option>
+                <option value="Izin">Izin</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="submit-btn" id="save-btn">Kirim Absensi</button>
+        <button type="button" class="submit-btn update-btn" id="update-btn">Simpan Perubahan</button>
+        
+    </form>
+</div>
+
+<div class="attendance-data-section">
+    <h3>Daftar Absensi Siswa</h3>
+    <table id="attendance-table">
+        <thead>
+            <tr>
+                <th>No</th>
+                <th>Nama Siswa</th>
+                <th>Kelas</th>
+                <th>Status</th>
+                <th>Waktu Absen</th>
+                <th>Keterangan</th> </tr>
+        </thead>
+        <tbody id="attendance-table-body">
+            </tbody>
+    </table>
+    
+    <div class="button-group">
+        <button id="save-local-manual-btn" class="save-local-btn">💾 Simpan Data Lokal</button>
+        <button id="download-excel-btn" class="download-excel-btn">⬇️ Unduh Absensi (XLS)</button> 
+    </div>
+</div>
+
+<script>
+    /* =================== KODE JAVASCRIPT =================== */
+
+    const ATTENDANCE_KEY = 'smp02_attendance_records';
+    const form = document.getElementById('attendance-form');
+    const tableBody = document.getElementById('attendance-table-body');
+    const downloadExcelBtn = document.getElementById('download-excel-btn'); 
+    const saveBtn = document.getElementById('save-btn');
+    const updateBtn = document.getElementById('update-btn');
+    const recordIdInput = document.getElementById('record-id');
+    const formTitle = document.getElementById('form-title');
+    const saveLocalManualBtn = document.getElementById('save-local-manual-btn'); 
+
+    let attendanceRecords = []; 
+
+    // --- FUNGSI LOCAL STORAGE ---
+
+    function loadRecords() {
+        const storedRecords = localStorage.getItem(ATTENDANCE_KEY);
+        if (storedRecords) {
+            attendanceRecords = JSON.parse(storedRecords);
+        } else {
+            attendanceRecords = [];
+        }
+        renderTable();
+    }
+
+    function saveRecords() {
+        localStorage.setItem(ATTENDANCE_KEY, JSON.stringify(attendanceRecords));
+    }
+
+    // --- FUNGSI TABEL DAN RENDERING ---
+
+    function renderTable() {
+        tableBody.innerHTML = ''; 
+        attendanceRecords.forEach((record, index) => {
+            const row = tableBody.insertRow();
+            
+            row.insertCell().textContent = index + 1; 
+            row.insertCell().textContent = record.nama;
+            row.insertCell().textContent = record.kelas;
+            row.insertCell().textContent = record.status;
+            row.insertCell().textContent = record.waktu;
+
+            // Kolom Keterangan (berisi tombol Edit dan Hapus)
+            const actionCell = row.insertCell(); 
+            
+            // Tombol Edit
+            const editButton = document.createElement('button');
+            editButton.textContent = 'Edit';
+            editButton.className = 'action-btn edit-btn';
+            editButton.onclick = () => editRecord(index); 
+            actionCell.appendChild(editButton);
+
+            // Tombol Hapus
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Hapus';
+            deleteButton.className = 'action-btn delete-btn';
+            deleteButton.onclick = () => deleteRecord(index); // Panggil fungsi deleteRecord
+            actionCell.appendChild(deleteButton);
+        });
+    }
+    
+    // --- FUNGSI EDIT DAN UPDATE ---
+
+    function editRecord(index) {
+        const record = attendanceRecords[index];
+        
+        document.getElementById('nama_siswa').value = record.nama;
+        document.getElementById('kelas_siswa').value = record.kelas;
+        document.getElementById('status_kehadiran').value = record.status;
+        
+        recordIdInput.value = index;
+        
+        saveBtn.style.display = 'none';
+        updateBtn.style.display = 'block';
+        formTitle.textContent = '✏️ Edit Absensi Siswa';
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- FUNGSI HAPUS ---
+    function deleteRecord(index) {
+        // Konfirmasi sebelum menghapus
+        const confirmDelete = confirm(`Apakah Anda yakin ingin menghapus data absensi untuk ${attendanceRecords[index].nama}?`);
+        
+        if (confirmDelete) {
+            // Hapus rekaman dari array
+            attendanceRecords.splice(index, 1);
+            
+            // Simpan perubahan dan render ulang tabel
+            saveRecords();
+            renderTable();
+            alert('Data absensi berhasil dihapus!');
+            
+            // Jika pengguna sedang dalam mode edit, kembalikan ke mode tambah
+            if (parseInt(recordIdInput.value) === index) {
+                form.reset();
+                recordIdInput.value = "";
+                saveBtn.style.display = 'block';
+                updateBtn.style.display = 'none';
+                formTitle.textContent = '📝 Tambah Absensi Siswa';
+            }
+        }
+    }
+
+
+    // --- FUNGSI EXCEL EXPORT ---
+
+    function recordsToHtmlTable() {
+        let html = '<table><thead><tr><th>No</th><th>Nama Siswa</th><th>Kelas</th><th>Status</th><th>Waktu Absen</th></tr></thead><tbody>';
+        attendanceRecords.forEach((record, index) => {
+            html += `<tr>
+                <td>${index + 1}</td>
+                <td>${record.nama}</td>
+                <td>${record.kelas}</td>
+                <td>${record.status}</td>
+                <td>${record.waktu}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        return html;
+    }
+
+    function exportToExcel() {
+        if (attendanceRecords.length === 0) {
+            alert('Tidak ada data absensi untuk diunduh.');
+            return;
+        }
+
+        const tableHTML = recordsToHtmlTable();
+        
+        const dataType = 'application/vnd.ms-excel';
+        const filename = 'Absensi_Siswa_' + new Date().toISOString().slice(0, 10) + '.xls';
+        
+        const downloadLink = document.createElement('a');
+        
+        const template = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8" />
+                </head>
+            <body>
+                ${tableHTML}
+            </body>
+        </html>`;
+        
+        const base64 = function(s) {
+            return window.btoa(unescape(encodeURIComponent(s)))
+        };
+        
+        downloadLink.href = 'data:' + dataType + ';base64,' + base64(template);
+        downloadLink.download = filename;
+        
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+    }
+    
+    // --- EVENT LISTENERS ---
+
+    // 1. Submit/Save Button Handler (Tambah Baru)
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        if (recordIdInput.value === "") {
+            const newRecord = {
+                nama: document.getElementById('nama_siswa').value,
+                kelas: document.getElementById('kelas_siswa').value,
+                status: document.getElementById('status_kehadiran').value,
+                waktu: new Date().toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'short' })
+            };
+            attendanceRecords.push(newRecord);
+            alert('Absensi berhasil dikirim!');
+        }
+
+        form.reset();
+        saveRecords(); 
+        renderTable();
+    });
+
+    // 2. Update Button Handler (saat edit)
+    updateBtn.addEventListener('click', function(event) {
+        event.preventDefault();
+        
+        const index = parseInt(recordIdInput.value);
+        if (index >= 0 && index < attendanceRecords.length) {
+            attendanceRecords[index].nama = document.getElementById('nama_siswa').value;
+            attendanceRecords[index].kelas = document.getElementById('kelas_siswa').value;
+            attendanceRecords[index].status = document.getElementById('status_kehadiran').value;
+            
+            alert('Perubahan berhasil disimpan!');
+            
+            // Kembalikan ke mode tambah baru
+            form.reset();
+            recordIdInput.value = "";
+            saveBtn.style.display = 'block';
+            updateBtn.style.display = 'none';
+            formTitle.textContent = '📝 Tambah Absensi Siswa';
+            
+            saveRecords();
+            renderTable();
+        } else {
+            alert('Error: Indeks data tidak valid.');
+        }
+    });
+
+    // 3. Tombol Simpan Data Lokal Manual
+    saveLocalManualBtn.addEventListener('click', function() {
+        saveRecords();
+        alert('Data absensi berhasil disimpan secara eksplisit ke Local Storage browser Anda.');
+    });
+
+    // 4. Tombol Unduh Excel
+    downloadExcelBtn.addEventListener('click', exportToExcel);
+
+
+    // Muat data saat halaman dimuat
+    window.onload = loadRecords;
+</script>
+
+</body>
+</html>
